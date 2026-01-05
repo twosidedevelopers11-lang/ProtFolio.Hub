@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Hub</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<style>
+html{scroll-behavior:smooth}
+body{
+background:linear-gradient(120deg,#fbc2eb,#a6c1ee,#fddb92,#d1fdff,#cfd9df);
+background-size:400% 400%;
+animation:pastelMove 15s ease infinite;
+min-height:100vh;
+font-family:'Segoe UI',sans-serif;
+transition:.5s;
+}
+body.dark{
+background:linear-gradient(120deg,#434343,#2c3e50,#3a1c71,#1f4037,#2b5876);
+background-size:400% 400%;
+animation:pastelMove 18s ease infinite;
+}
+@keyframes pastelMove{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+.glass-nav{
+background:rgba(255,255,255,.2);
+backdrop-filter:blur(12px);
+border-bottom:1px solid rgba(255,255,255,.3);
+}
+.glass-card{
+background:rgba(255,255,255,.35);
+backdrop-filter:blur(15px);
+border-radius:20px;
+border:1px solid rgba(255,255,255,.4);
+}
+.card{
+border-radius:20px;
+cursor:pointer;
+transition:.3s;
+}
+.card:hover{
+transform:scale(1.05);
+box-shadow:0 0 25px rgba(255,255,255,.6);
+}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar glass-nav navbar-dark animate__fadeInDown">
+<div class="container">
+<span class="navbar-brand">🎨 Portfolio Hub</span>
+
+<ul class="navbar-nav flex-row gap-3 ms-auto">
+<li class="nav-item"><a href="#about" class="nav-link text-white">About</a></li>
+<li class="nav-item"><a href="#contact" class="nav-link text-white">Contact</a></li>
+</ul>
+
+<button class="btn btn-outline-light btn-sm ms-3" onclick="toggleTheme()">
+<span id="themeIcon">🌙</span>
+</button>
+</div>
+</nav>
+
+<!-- ABOUT -->
+<section id="about" class="container py-5">
+<div class="glass-card p-4">
+<h3>About</h3>
+<p> Add your Qualifications & Skills in the Description.</p>
+</div>
+</section>
+
+<!-- HOME -->
+<div class="container py-5" id="homePage">
+
+<div class="glass-card p-4 mb-4">
+<h5>➕ Add New User</h5>
+<div class="row g-2">
+<div class="col-md-3"><input id="nameInput" class="form-control" placeholder="Name"></div>
+<div class="col-md-3"><input id="roleInput" class="form-control" placeholder="Role"></div>
+<div class="col-md-3"><input id="descInput" class="form-control" placeholder="Description"></div>
+<div class="col-md-2"><input type="file" id="photoInput" class="form-control" accept="image/*"></div>
+<div class="col-md-1 d-grid"><button class="btn btn-success" onclick="addUser()">Add</button></div>
+</div>
+</div>
+
+<h2 class="text-center text-white mb-4">Select a User Portfolio</h2>
+<div class="row g-4" id="userContainer"></div>
+</div>
+
+<!-- PROFILE -->
+<div class="container py-5 hidden" id="profilePage">
+<div class="glass-card p-4 text-center">
+<img id="profilePhoto" class="rounded-circle mb-3" width="100">
+<h2 id="profileName"></h2>
+<h5 id="profileRole"></h5>
+<p id="profileDescription"></p>
+<button class="btn btn-dark me-2" onclick="exportPDF()">⬇ PDF</button>
+<button class="btn btn-light" onclick="goBack()">⬅ Back</button>
+</div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact" class="container py-5">
+<div class="glass-card p-4">
+<h3>Contact</h3>
+
+<form id="contactForm">
+<input class="form-control mb-2" id="cname" placeholder="Name" required>
+<input class="form-control mb-2" id="cemail" placeholder="Email" required>
+<textarea class="form-control mb-2" id="cmessage" placeholder="Message" required></textarea>
+<button class="btn btn-primary">Send</button>
+</form>
+
+<p id="emailStatus" class="mt-2"></p>
+</div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+(function(){
+emailjs.init("41KFLLW5uombwq9z5");   // 🔴 replace
+})();
+</script>
+
+<script>
+let users=JSON.parse(localStorage.getItem("users"))||[];
+
+function toggleTheme(){
+document.body.classList.toggle("dark");
+localStorage.setItem("theme",document.body.classList.contains("dark"));
+themeIcon.innerText=document.body.classList.contains("dark")?"☀️":"🌙";
+}
+if(localStorage.getItem("theme")==="true") toggleTheme();
+
+function addUser(){
+const name=nameInput.value.trim();
+const role=roleInput.value.trim();
+const desc=descInput.value.trim();
+const file=photoInput.files[0];
+if(!name||!role||!desc){alert("Fill all fields");return;}
+const reader=new FileReader();
+reader.onload=()=>saveUser(reader.result);
+file?reader.readAsDataURL(file):saveUser("");
+}
+
+function saveUser(photo){
+users.push({name:nameInput.value,role:roleInput.value,desc:descInput.value,photo});
+localStorage.setItem("users",JSON.stringify(users));
+renderUsers();
+nameInput.value=roleInput.value=descInput.value=photoInput.value="";
+}
+
+function renderUsers(){
+userContainer.innerHTML="";
+users.forEach((u,i)=>{
+userContainer.innerHTML+=`
+<div class="col-md-4">
+<div class="card glass-card p-4 text-center animate__zoomIn" onclick="openProfile(${i})">
+<h4>${u.name}</h4>
+<p>${u.role}</p>
+</div></div>`;
+});
+}
+
+function openProfile(i){
+const u=users[i];
+homePage.classList.add("hidden");
+profilePage.classList.remove("hidden");
+profileName.innerText=u.name;
+profileRole.innerText=u.role;
+profileDescription.innerText=u.desc;
+profilePhoto.src=u.photo||"https://via.placeholder.com/100";
+}
+
+function goBack(){
+profilePage.classList.add("hidden");
+homePage.classList.remove("hidden");
+}
+
+function exportPDF(){
+const s=document.createElement("script");
+s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+s.onload=()=>{
+const pdf=new window.jspdf.jsPDF();
+pdf.text(`Name: ${profileName.innerText}`,10,20);
+pdf.text(`Role: ${profileRole.innerText}`,10,30);
+pdf.text(profileDescription.innerText,10,40);
+pdf.save("portfolio.pdf");
+};
+document.body.appendChild(s);
+}
+
+document.getElementById("contactForm").addEventListener("submit",function(e){
+e.preventDefault();
+const params={
+name:cname.value,
+email:cemail.value,
+message:cmessage.value
+};
+emailjs.send("service_om2mufi","template_s2zu00a",params) // 🔴 replace
+.then(()=>{
+emailStatus.innerHTML="<span class='text-success'>✅ Message sent to your email!</span>";
+this.reset();
+})
+.catch(()=>{
+emailStatus.innerHTML="<span class='text-danger'>❌ Failed to send message</span>";
+});
+});
+
+renderUsers();
+</script>
+
+</body>
+</html>
